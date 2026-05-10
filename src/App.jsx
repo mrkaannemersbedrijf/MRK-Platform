@@ -1,35 +1,34 @@
+import { useState } from "react";
 import "./style.css";
 
 export default function App() {
-  const facturen = [
-    { nr: "MRK-2025-001", klant: "D. Bussers", status: "Verstuurd", bedrag: 1250, tijd: "08:05" },
-    { nr: "MRK-2025-002", klant: "VvE Amsterdam", status: "Niet verstuurd", bedrag: 890, tijd: "09:20" },
-    { nr: "MRK-2025-003", klant: "Particulier klant", status: "Betaald", bedrag: 2100, tijd: "14:05" },
-    { nr: "MRK-2025-004", klant: "Onderhoud Project", status: "Openstaand", bedrag: 675, tijd: "16:30" }
-  ];
+  const [pagina, setPagina] = useState("Dashboard");
 
-  const totaal = facturen.reduce((s, f) => s + f.bedrag, 0);
-  const openstaand = facturen
-    .filter(f => f.status === "Openstaand" || f.status === "Niet verstuurd")
-    .reduce((s, f) => s + f.bedrag, 0);
+  const menu = [
+    "Dashboard",
+    "Klanten",
+    "Werkbonnen",
+    "Urenregistratie",
+    "Offertes",
+    "Facturen",
+    "Planning",
+    "Instellingen"
+  ];
 
   return (
     <div className="layout">
       <aside className="sidebar">
         <h1 className="logo">MRK</h1>
 
-        <button className="active">Dashboard</button>
-        <button>Klanten</button>
-        <button>Werkbonnen</button>
-        <button>Urenregistratie</button>
-        <button>Offertes</button>
-        <button>Facturen</button>
-        <button>Planning</button>
-
-        <div className="bottom">
-          <button>Instellingen</button>
-          <button>Uitloggen</button>
-        </div>
+        {menu.map((item) => (
+          <button
+            key={item}
+            onClick={() => setPagina(item)}
+            className={pagina === item ? "active" : ""}
+          >
+            {item}
+          </button>
+        ))}
       </aside>
 
       <main className="main">
@@ -38,69 +37,184 @@ export default function App() {
             <span>CRM & Klanten</span>
             <span>Rapportage</span>
             <span>Werkbonnen</span>
-            <span className="pill">Facturatie</span>
+            <span className="pill">{pagina}</span>
           </nav>
-
           <div className="profile">🔔 👤</div>
         </header>
 
-        <section className="stats">
-          <div className="stat-card">
-            <h3>Verzonden facturen</h3>
-            <strong>448</strong>
-            <p>Afgelopen maand 20% gestegen</p>
-          </div>
+        {pagina === "Dashboard" && <Dashboard />}
+        {pagina === "Klanten" && <Klanten />}
+        {pagina === "Werkbonnen" && <Werkbonnen />}
+        {pagina === "Urenregistratie" && <Urenregistratie />}
+        {pagina === "Offertes" && <Offertes />}
+        {pagina === "Facturen" && <Facturen />}
+        {pagina === "Planning" && <Planning />}
+        {pagina === "Instellingen" && <Instellingen />}
+      </main>
+    </div>
+  );
+}
 
-          <div className="stat-card">
-            <h3>Gefactureerd</h3>
-            <strong>€ {totaal.toFixed(2)}</strong>
-            <p>75% van verzonden facturen</p>
-          </div>
+function Dashboard() {
+  return (
+    <>
+      <section className="stats">
+        <div className="stat-card">
+          <h3>Verzonden facturen</h3>
+          <strong>448</strong>
+          <p>Afgelopen maand 20% gestegen</p>
+        </div>
 
-          <div className="stat-card">
-            <h3>Openstaand</h3>
-            <strong>€ {openstaand.toFixed(2)}</strong>
-            <p>Nog te ontvangen bedrag</p>
-          </div>
-        </section>
+        <div className="stat-card">
+          <h3>Gefactureerd</h3>
+          <strong>€58.432</strong>
+          <p>75% van verzonden facturen</p>
+        </div>
 
-        <section className="content">
-          <div className="chart-card">
-            <h2>Facturatie per maand</h2>
+        <div className="stat-card">
+          <h3>Openstaand</h3>
+          <strong>€12.850</strong>
+          <p>Nog te ontvangen bedrag</p>
+        </div>
+      </section>
 
-            <div className="chart">
-              {["Jan", "Feb", "Mrt", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"].map((m, i) => (
-                <div className="bar-wrap" key={m}>
-                  <div className="bar-bg">
-                    <div className="bar" style={{ height: `${35 + (i * 13) % 55}%` }}></div>
-                  </div>
-                  <small>{m}</small>
+      <section className="content">
+        <div className="chart-card">
+          <h2>Facturatie per maand</h2>
+
+          <div className="chart">
+            {["Jan", "Feb", "Mrt", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"].map((m, i) => (
+              <div className="bar-wrap" key={m}>
+                <div className="bar-bg">
+                  <div className="bar" style={{ height: `${35 + (i * 13) % 55}%` }}></div>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="invoice-card">
-            <h2>Verzonden facturen</h2>
-
-            {facturen.map((f) => (
-              <div className="invoice" key={f.nr}>
-                <div className={f.status === "Niet verstuurd" ? "icon error" : "icon"}>✓</div>
-
-                <div>
-                  <strong>Factuur {f.nr}</strong>
-                  <p>
-                    {f.status} naar {f.klant}
-                  </p>
-                  <small>{f.tijd}</small>
-                </div>
-
-                <button>Bekijk</button>
+                <small>{m}</small>
               </div>
             ))}
           </div>
-        </section>
-      </main>
+        </div>
+
+        <div className="invoice-card">
+          <h2>Laatste facturen</h2>
+          <FactuurRegel nr="MRK-2025-001" klant="D. Bussers" status="Verstuurd" />
+          <FactuurRegel nr="MRK-2025-002" klant="VvE Amsterdam" status="Openstaand" error />
+          <FactuurRegel nr="MRK-2025-003" klant="Particulier klant" status="Betaald" />
+        </div>
+      </section>
+    </>
+  );
+}
+
+function Klanten() {
+  const [klanten, setKlanten] = useState([]);
+  const [naam, setNaam] = useState("");
+
+  function toevoegen() {
+    if (!naam) return;
+    setKlanten([...klanten, naam]);
+    setNaam("");
+  }
+
+  return (
+    <div className="page-card">
+      <h2>Klantenbeheer</h2>
+      <input value={naam} onChange={(e) => setNaam(e.target.value)} placeholder="Klantnaam" />
+      <button onClick={toevoegen}>Klant toevoegen</button>
+
+      <ul>
+        {klanten.map((k, i) => (
+          <li key={i}>{k}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function Werkbonnen() {
+  return (
+    <div className="page-card">
+      <h2>Werkbonnen</h2>
+      <input placeholder="Klantnaam" />
+      <input placeholder="Projectadres" />
+      <textarea placeholder="Uitgevoerde werkzaamheden"></textarea>
+      <button>Werkbon opslaan</button>
+    </div>
+  );
+}
+
+function Urenregistratie() {
+  return (
+    <div className="page-card">
+      <h2>Urenregistratie</h2>
+      <input placeholder="Medewerker" />
+      <input placeholder="Project" />
+      <input type="number" placeholder="Aantal uren" />
+      <input type="number" placeholder="Uurtarief" defaultValue="55" />
+      <button>Uren opslaan</button>
+    </div>
+  );
+}
+
+function Offertes() {
+  return (
+    <div className="page-card">
+      <h2>Offertes</h2>
+      <input placeholder="Klantnaam" />
+      <input placeholder="Offertenummer" />
+      <textarea placeholder="Omschrijving offerte"></textarea>
+      <input type="number" placeholder="Bedrag excl. btw" />
+      <button>Offerte maken</button>
+    </div>
+  );
+}
+
+function Facturen() {
+  return (
+    <div className="page-card">
+      <h2>Facturen</h2>
+      <FactuurRegel nr="MRK-2025-001" klant="D. Bussers" status="Verstuurd" />
+      <FactuurRegel nr="MRK-2025-002" klant="VvE Amsterdam" status="Openstaand" error />
+      <FactuurRegel nr="MRK-2025-003" klant="Particulier klant" status="Betaald" />
+      <button onClick={() => window.print()}>Facturen printen</button>
+    </div>
+  );
+}
+
+function Planning() {
+  return (
+    <div className="page-card">
+      <h2>Planning</h2>
+      <input type="date" />
+      <input placeholder="Klant / project" />
+      <input placeholder="Medewerker" />
+      <button>Afspraak toevoegen</button>
+    </div>
+  );
+}
+
+function Instellingen() {
+  return (
+    <div className="page-card">
+      <h2>Instellingen</h2>
+      <input placeholder="Bedrijfsnaam" defaultValue="MRK Aannemersbedrijf" />
+      <input placeholder="E-mail" />
+      <input placeholder="Telefoonnummer" />
+      <input placeholder="IBAN" />
+      <button>Opslaan</button>
+    </div>
+  );
+}
+
+function FactuurRegel({ nr, klant, status, error }) {
+  return (
+    <div className="invoice">
+      <div className={error ? "icon error" : "icon"}>{error ? "!" : "✓"}</div>
+      <div>
+        <strong>Factuur {nr}</strong>
+        <p>{status} naar {klant}</p>
+        <small>Vandaag</small>
+      </div>
+      <button>Bekijk</button>
     </div>
   );
 }
