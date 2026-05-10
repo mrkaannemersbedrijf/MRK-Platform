@@ -1,147 +1,132 @@
-
 import { useState } from "react";
 
 export default function App() {
-  const [klanten, setKlanten] = useState([]);
-  const [uren, setUren] = useState([]);
-
+  const [facturen, setFacturen] = useState([]);
   const [klant, setKlant] = useState("");
-  const [project, setProject] = useState("");
-  const [aantalUren, setAantalUren] = useState("");
-  const [tarief, setTarief] = useState("55");
+  const [omschrijving, setOmschrijving] = useState("");
+  const [bedrag, setBedrag] = useState("");
 
-  const totaal = uren.reduce(
-    (som, regel) => som + Number(regel.uren) * Number(regel.tarief),
+  const openstaand = facturen.filter((f) => f.status === "Openstaand");
+  const verstuurd = facturen.filter((f) => f.status === "Verstuurd");
+  const betaald = facturen.filter((f) => f.status === "Betaald");
+
+  const totaalOpenstaand = openstaand.reduce(
+    (som, f) => som + Number(f.bedrag),
     0
   );
 
-  function klantToevoegen() {
-    if (!klant) return;
+  function factuurToevoegen() {
+    if (!klant || !omschrijving || !bedrag) return;
 
-    setKlanten([...klanten, klant]);
-    setKlant("");
-  }
-
-  function urenToevoegen() {
-    if (!project || !aantalUren) return;
-
-    setUren([
-      ...uren,
+    setFacturen([
+      ...facturen,
       {
+        id: Date.now(),
+        nummer: `MRK-${facturen.length + 1}`,
         klant,
-        project,
-        uren: aantalUren,
-        tarief,
+        omschrijving,
+        bedrag,
+        status: "Openstaand",
       },
     ]);
 
-    setProject("");
-    setAantalUren("");
+    setKlant("");
+    setOmschrijving("");
+    setBedrag("");
+  }
+
+  function statusWijzigen(id, nieuweStatus) {
+    setFacturen(
+      facturen.map((f) =>
+        f.id === id ? { ...f, status: nieuweStatus } : f
+      )
+    );
   }
 
   return (
     <div className="app">
       <header>
-        <h1>MRK Administratie Platform</h1>
-        <p>Werkbonnen, urenregistratie en facturen</p>
+        <h1>MRK Administratie Dashboard</h1>
+        <p>Facturen, openstaande bedragen en betaalstatus</p>
       </header>
 
       <section className="cards">
         <div className="card">
-          <h2>Klanten</h2>
-
-          <input
-            placeholder="Klantnaam"
-            value={klant}
-            onChange={(e) => setKlant(e.target.value)}
-          />
-
-          <button onClick={klantToevoegen}>
-            Klant toevoegen
-          </button>
-
-          <ul>
-            {klanten.map((k, index) => (
-              <li key={index}>{k}</li>
-            ))}
-          </ul>
+          <h2>Openstaand</h2>
+          <h1>€ {totaalOpenstaand.toFixed(2)}</h1>
+          <p>{openstaand.length} openstaande facturen</p>
         </div>
 
         <div className="card">
-          <h2>Urenregistratie</h2>
-
-          <input
-            placeholder="Project"
-            value={project}
-            onChange={(e) => setProject(e.target.value)}
-          />
-
-          <input
-            placeholder="Aantal uren"
-            type="number"
-            value={aantalUren}
-            onChange={(e) => setAantalUren(e.target.value)}
-          />
-
-          <input
-            placeholder="Uurtarief"
-            type="number"
-            value={tarief}
-            onChange={(e) => setTarief(e.target.value)}
-          />
-
-          <button onClick={urenToevoegen}>
-            Uren opslaan
-          </button>
+          <h2>Verstuurd</h2>
+          <h1>{verstuurd.length}</h1>
+          <p>Verstuurde facturen</p>
         </div>
 
         <div className="card">
-          <h2>Factuur</h2>
-
-          <p>
-            Totaal excl. btw:
-            € {totaal.toFixed(2)}
-          </p>
-
-          <p>
-            BTW 21%:
-            € {(totaal * 0.21).toFixed(2)}
-          </p>
-
-          <h3>
-            Totaal:
-            € {(totaal * 1.21).toFixed(2)}
-          </h3>
-
-          <button onClick={() => window.print()}>
-            Factuur printen
-          </button>
+          <h2>Betaald</h2>
+          <h1>{betaald.length}</h1>
+          <p>Betaalde facturen</p>
         </div>
       </section>
 
       <section className="card wide">
-        <h2>Urenregels</h2>
+        <h2>Nieuwe factuur</h2>
+
+        <input
+          placeholder="Klantnaam"
+          value={klant}
+          onChange={(e) => setKlant(e.target.value)}
+        />
+
+        <input
+          placeholder="Omschrijving"
+          value={omschrijving}
+          onChange={(e) => setOmschrijving(e.target.value)}
+        />
+
+        <input
+          placeholder="Bedrag excl. btw"
+          type="number"
+          value={bedrag}
+          onChange={(e) => setBedrag(e.target.value)}
+        />
+
+        <button onClick={factuurToevoegen}>Factuur toevoegen</button>
+      </section>
+
+      <section className="card wide">
+        <h2>Facturen overzicht</h2>
 
         <table>
           <thead>
             <tr>
+              <th>Factuurnr.</th>
               <th>Klant</th>
-              <th>Project</th>
-              <th>Uren</th>
-              <th>Tarief</th>
+              <th>Omschrijving</th>
               <th>Bedrag</th>
+              <th>Status</th>
             </tr>
           </thead>
 
           <tbody>
-            {uren.map((regel, index) => (
-              <tr key={index}>
-                <td>{regel.klant}</td>
-                <td>{regel.project}</td>
-                <td>{regel.uren}</td>
-                <td>€ {regel.tarief}</td>
+            {facturen.map((factuur) => (
+              <tr key={factuur.id}>
+                <td>{factuur.nummer}</td>
+                <td>{factuur.klant}</td>
+                <td>{factuur.omschrijving}</td>
+                <td>€ {Number(factuur.bedrag).toFixed(2)}</td>
                 <td>
-                  € {(regel.uren * regel.tarief).toFixed(2)}
+                  <select
+                    value={factuur.status}
+                    onChange={(e) =>
+                      statusWijzigen(factuur.id, e.target.value)
+                    }
+                  >
+                    <option>Openstaand</option>
+                    <option>Verstuurd</option>
+                    <option>Betaald</option>
+                  </select>
                 </td>
               </tr>
             ))}
