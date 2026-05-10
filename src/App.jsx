@@ -1,17 +1,47 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./style.css";
 
 export default function App() {
   const [pagina, setPagina] = useState("Dashboard");
+
+  const [klanten, setKlanten] = useState(() => {
+    return JSON.parse(localStorage.getItem("mrk_klanten")) || [];
+  });
+
+  const [facturen, setFacturen] = useState(() => {
+    return JSON.parse(localStorage.getItem("mrk_facturen")) || [];
+  });
+
+  const [werkbonnen, setWerkbonnen] = useState(() => {
+    return JSON.parse(localStorage.getItem("mrk_werkbonnen")) || [];
+  });
+
+  const [uren, setUren] = useState(() => {
+    return JSON.parse(localStorage.getItem("mrk_uren")) || [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("mrk_klanten", JSON.stringify(klanten));
+  }, [klanten]);
+
+  useEffect(() => {
+    localStorage.setItem("mrk_facturen", JSON.stringify(facturen));
+  }, [facturen]);
+
+  useEffect(() => {
+    localStorage.setItem("mrk_werkbonnen", JSON.stringify(werkbonnen));
+  }, [werkbonnen]);
+
+  useEffect(() => {
+    localStorage.setItem("mrk_uren", JSON.stringify(uren));
+  }, [uren]);
 
   const menu = [
     "Dashboard",
     "Klanten",
     "Werkbonnen",
     "Urenregistratie",
-    "Offertes",
     "Facturen",
-    "Planning",
     "Instellingen"
   ];
 
@@ -33,161 +63,288 @@ export default function App() {
 
       <main className="main">
         <header className="topbar">
-          <nav>
-            <span>CRM & Klanten</span>
-            <span>Rapportage</span>
-            <span>Werkbonnen</span>
-            <span className="pill">{pagina}</span>
-          </nav>
-          <div className="profile">🔔 👤</div>
+          <h2>{pagina}</h2>
         </header>
 
-        {pagina === "Dashboard" && <Dashboard />}
-        {pagina === "Klanten" && <Klanten />}
-        {pagina === "Werkbonnen" && <Werkbonnen />}
-        {pagina === "Urenregistratie" && <Urenregistratie />}
-        {pagina === "Offertes" && <Offertes />}
-        {pagina === "Facturen" && <Facturen />}
-        {pagina === "Planning" && <Planning />}
+        {pagina === "Dashboard" && (
+          <Dashboard
+            klanten={klanten}
+            facturen={facturen}
+            werkbonnen={werkbonnen}
+            uren={uren}
+          />
+        )}
+
+        {pagina === "Klanten" && (
+          <Klanten
+            klanten={klanten}
+            setKlanten={setKlanten}
+          />
+        )}
+
+        {pagina === "Werkbonnen" && (
+          <Werkbonnen
+            werkbonnen={werkbonnen}
+            setWerkbonnen={setWerkbonnen}
+          />
+        )}
+
+        {pagina === "Urenregistratie" && (
+          <Urenregistratie
+            uren={uren}
+            setUren={setUren}
+          />
+        )}
+
+        {pagina === "Facturen" && (
+          <Facturen
+            facturen={facturen}
+            setFacturen={setFacturen}
+          />
+        )}
+
         {pagina === "Instellingen" && <Instellingen />}
       </main>
     </div>
   );
 }
 
-function Dashboard() {
+function Dashboard({ klanten, facturen, werkbonnen, uren }) {
+  const openstaand = facturen.reduce(
+    (s, f) => s + Number(f.bedrag || 0),
+    0
+  );
+
   return (
     <>
       <section className="stats">
         <div className="stat-card">
-          <h3>Verzonden facturen</h3>
-          <strong>448</strong>
-          <p>Afgelopen maand 20% gestegen</p>
+          <h3>Klanten</h3>
+          <strong>{klanten.length}</strong>
         </div>
 
         <div className="stat-card">
-          <h3>Gefactureerd</h3>
-          <strong>€58.432</strong>
-          <p>75% van verzonden facturen</p>
+          <h3>Werkbonnen</h3>
+          <strong>{werkbonnen.length}</strong>
         </div>
 
         <div className="stat-card">
           <h3>Openstaand</h3>
-          <strong>€12.850</strong>
-          <p>Nog te ontvangen bedrag</p>
-        </div>
-      </section>
-
-      <section className="content">
-        <div className="chart-card">
-          <h2>Facturatie per maand</h2>
-
-          <div className="chart">
-            {["Jan", "Feb", "Mrt", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"].map((m, i) => (
-              <div className="bar-wrap" key={m}>
-                <div className="bar-bg">
-                  <div className="bar" style={{ height: `${35 + (i * 13) % 55}%` }}></div>
-                </div>
-                <small>{m}</small>
-              </div>
-            ))}
-          </div>
+          <strong>€ {openstaand.toFixed(2)}</strong>
         </div>
 
-        <div className="invoice-card">
-          <h2>Laatste facturen</h2>
-          <FactuurRegel nr="MRK-2025-001" klant="D. Bussers" status="Verstuurd" />
-          <FactuurRegel nr="MRK-2025-002" klant="VvE Amsterdam" status="Openstaand" error />
-          <FactuurRegel nr="MRK-2025-003" klant="Particulier klant" status="Betaald" />
+        <div className="stat-card">
+          <h3>Urenregistraties</h3>
+          <strong>{uren.length}</strong>
         </div>
       </section>
     </>
   );
 }
 
-function Klanten() {
-  const [klanten, setKlanten] = useState([]);
+function Klanten({ klanten, setKlanten }) {
   const [naam, setNaam] = useState("");
 
   function toevoegen() {
     if (!naam) return;
-    setKlanten([...klanten, naam]);
+
+    setKlanten([
+      ...klanten,
+      {
+        id: Date.now(),
+        naam
+      }
+    ]);
+
     setNaam("");
   }
 
   return (
     <div className="page-card">
-      <h2>Klantenbeheer</h2>
-      <input value={naam} onChange={(e) => setNaam(e.target.value)} placeholder="Klantnaam" />
-      <button onClick={toevoegen}>Klant toevoegen</button>
+      <h2>Klanten</h2>
 
-      <ul>
-        {klanten.map((k, i) => (
-          <li key={i}>{k}</li>
-        ))}
-      </ul>
+      <input
+        value={naam}
+        onChange={(e) => setNaam(e.target.value)}
+        placeholder="Klantnaam"
+      />
+
+      <button onClick={toevoegen}>
+        Klant toevoegen
+      </button>
+
+      {klanten.map((k) => (
+        <div className="list-item" key={k.id}>
+          {k.naam}
+        </div>
+      ))}
     </div>
   );
 }
 
-function Werkbonnen() {
+function Werkbonnen({ werkbonnen, setWerkbonnen }) {
+  const [klant, setKlant] = useState("");
+  const [werk, setWerk] = useState("");
+
+  function toevoegen() {
+    if (!klant || !werk) return;
+
+    setWerkbonnen([
+      ...werkbonnen,
+      {
+        id: Date.now(),
+        klant,
+        werk
+      }
+    ]);
+
+    setKlant("");
+    setWerk("");
+  }
+
   return (
     <div className="page-card">
       <h2>Werkbonnen</h2>
-      <input placeholder="Klantnaam" />
-      <input placeholder="Projectadres" />
-      <textarea placeholder="Uitgevoerde werkzaamheden"></textarea>
-      <button>Werkbon opslaan</button>
+
+      <input
+        placeholder="Klant"
+        value={klant}
+        onChange={(e) => setKlant(e.target.value)}
+      />
+
+      <textarea
+        placeholder="Werkzaamheden"
+        value={werk}
+        onChange={(e) => setWerk(e.target.value)}
+      ></textarea>
+
+      <button onClick={toevoegen}>
+        Werkbon opslaan
+      </button>
+
+      {werkbonnen.map((w) => (
+        <div className="list-item" key={w.id}>
+          <strong>{w.klant}</strong>
+          <p>{w.werk}</p>
+        </div>
+      ))}
     </div>
   );
 }
 
-function Urenregistratie() {
+function Urenregistratie({ uren, setUren }) {
+  const [medewerker, setMedewerker] = useState("");
+  const [project, setProject] = useState("");
+  const [aantal, setAantal] = useState("");
+
+  function toevoegen() {
+    if (!medewerker || !project || !aantal) return;
+
+    setUren([
+      ...uren,
+      {
+        id: Date.now(),
+        medewerker,
+        project,
+        aantal
+      }
+    ]);
+
+    setMedewerker("");
+    setProject("");
+    setAantal("");
+  }
+
   return (
     <div className="page-card">
       <h2>Urenregistratie</h2>
-      <input placeholder="Medewerker" />
-      <input placeholder="Project" />
-      <input type="number" placeholder="Aantal uren" />
-      <input type="number" placeholder="Uurtarief" defaultValue="55" />
-      <button>Uren opslaan</button>
+
+      <input
+        placeholder="Medewerker"
+        value={medewerker}
+        onChange={(e) => setMedewerker(e.target.value)}
+      />
+
+      <input
+        placeholder="Project"
+        value={project}
+        onChange={(e) => setProject(e.target.value)}
+      />
+
+      <input
+        type="number"
+        placeholder="Aantal uren"
+        value={aantal}
+        onChange={(e) => setAantal(e.target.value)}
+      />
+
+      <button onClick={toevoegen}>
+        Uren opslaan
+      </button>
+
+      {uren.map((u) => (
+        <div className="list-item" key={u.id}>
+          <strong>{u.medewerker}</strong>
+          <p>
+            {u.project} - {u.aantal} uur
+          </p>
+        </div>
+      ))}
     </div>
   );
 }
 
-function Offertes() {
-  return (
-    <div className="page-card">
-      <h2>Offertes</h2>
-      <input placeholder="Klantnaam" />
-      <input placeholder="Offertenummer" />
-      <textarea placeholder="Omschrijving offerte"></textarea>
-      <input type="number" placeholder="Bedrag excl. btw" />
-      <button>Offerte maken</button>
-    </div>
-  );
-}
+function Facturen({ facturen, setFacturen }) {
+  const [klant, setKlant] = useState("");
+  const [bedrag, setBedrag] = useState("");
 
-function Facturen() {
+  function toevoegen() {
+    if (!klant || !bedrag) return;
+
+    setFacturen([
+      ...facturen,
+      {
+        id: Date.now(),
+        klant,
+        bedrag
+      }
+    ]);
+
+    setKlant("");
+    setBedrag("");
+  }
+
   return (
     <div className="page-card">
       <h2>Facturen</h2>
-      <FactuurRegel nr="MRK-2025-001" klant="D. Bussers" status="Verstuurd" />
-      <FactuurRegel nr="MRK-2025-002" klant="VvE Amsterdam" status="Openstaand" error />
-      <FactuurRegel nr="MRK-2025-003" klant="Particulier klant" status="Betaald" />
-      <button onClick={() => window.print()}>Facturen printen</button>
-    </div>
-  );
-}
 
-function Planning() {
-  return (
-    <div className="page-card">
-      <h2>Planning</h2>
-      <input type="date" />
-      <input placeholder="Klant / project" />
-      <input placeholder="Medewerker" />
-      <button>Afspraak toevoegen</button>
+      <input
+        placeholder="Klant"
+        value={klant}
+        onChange={(e) => setKlant(e.target.value)}
+      />
+
+      <input
+        type="number"
+        placeholder="Bedrag"
+        value={bedrag}
+        onChange={(e) => setBedrag(e.target.value)}
+      />
+
+      <button onClick={toevoegen}>
+        Factuur toevoegen
+      </button>
+
+      {facturen.map((f) => (
+        <div className="invoice" key={f.id}>
+          <div className="icon">€</div>
+
+          <div>
+            <strong>{f.klant}</strong>
+            <p>€ {Number(f.bedrag).toFixed(2)}</p>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -196,25 +353,12 @@ function Instellingen() {
   return (
     <div className="page-card">
       <h2>Instellingen</h2>
-      <input placeholder="Bedrijfsnaam" defaultValue="MRK Aannemersbedrijf" />
+
+      <input placeholder="Bedrijfsnaam" />
       <input placeholder="E-mail" />
       <input placeholder="Telefoonnummer" />
-      <input placeholder="IBAN" />
-      <button>Opslaan</button>
-    </div>
-  );
-}
 
-function FactuurRegel({ nr, klant, status, error }) {
-  return (
-    <div className="invoice">
-      <div className={error ? "icon error" : "icon"}>{error ? "!" : "✓"}</div>
-      <div>
-        <strong>Factuur {nr}</strong>
-        <p>{status} naar {klant}</p>
-        <small>Vandaag</small>
-      </div>
-      <button>Bekijk</button>
+      <button>Opslaan</button>
     </div>
   );
 }
