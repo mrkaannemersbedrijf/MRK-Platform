@@ -1,138 +1,106 @@
-import { useState } from "react";
+import "./style.css";
 
 export default function App() {
-  const [facturen, setFacturen] = useState([]);
-  const [klant, setKlant] = useState("");
-  const [omschrijving, setOmschrijving] = useState("");
-  const [bedrag, setBedrag] = useState("");
+  const facturen = [
+    { nr: "MRK-2025-001", klant: "D. Bussers", status: "Verstuurd", bedrag: 1250, tijd: "08:05" },
+    { nr: "MRK-2025-002", klant: "VvE Amsterdam", status: "Niet verstuurd", bedrag: 890, tijd: "09:20" },
+    { nr: "MRK-2025-003", klant: "Particulier klant", status: "Betaald", bedrag: 2100, tijd: "14:05" },
+    { nr: "MRK-2025-004", klant: "Onderhoud Project", status: "Openstaand", bedrag: 675, tijd: "16:30" }
+  ];
 
-  const openstaand = facturen.filter((f) => f.status === "Openstaand");
-  const verstuurd = facturen.filter((f) => f.status === "Verstuurd");
-  const betaald = facturen.filter((f) => f.status === "Betaald");
-
-  const totaalOpenstaand = openstaand.reduce(
-    (som, f) => som + Number(f.bedrag),
-    0
-  );
-
-  function factuurToevoegen() {
-    if (!klant || !omschrijving || !bedrag) return;
-
-    setFacturen([
-      ...facturen,
-      {
-        id: Date.now(),
-        nummer: `MRK-${facturen.length + 1}`,
-        klant,
-        omschrijving,
-        bedrag,
-        status: "Openstaand",
-      },
-    ]);
-
-    setKlant("");
-    setOmschrijving("");
-    setBedrag("");
-  }
-
-  function statusWijzigen(id, nieuweStatus) {
-    setFacturen(
-      facturen.map((f) =>
-        f.id === id ? { ...f, status: nieuweStatus } : f
-      )
-    );
-  }
+  const totaal = facturen.reduce((s, f) => s + f.bedrag, 0);
+  const openstaand = facturen
+    .filter(f => f.status === "Openstaand" || f.status === "Niet verstuurd")
+    .reduce((s, f) => s + f.bedrag, 0);
 
   return (
-    <div className="app">
-      <header>
-        <h1>MRK Administratie Dashboard</h1>
-        <p>Facturen, openstaande bedragen en betaalstatus</p>
-      </header>
+    <div className="layout">
+      <aside className="sidebar">
+        <h1 className="logo">MRK</h1>
 
-      <section className="cards">
-        <div className="card">
-          <h2>Openstaand</h2>
-          <h1>€ {totaalOpenstaand.toFixed(2)}</h1>
-          <p>{openstaand.length} openstaande facturen</p>
+        <button className="active">Dashboard</button>
+        <button>Klanten</button>
+        <button>Werkbonnen</button>
+        <button>Urenregistratie</button>
+        <button>Offertes</button>
+        <button>Facturen</button>
+        <button>Planning</button>
+
+        <div className="bottom">
+          <button>Instellingen</button>
+          <button>Uitloggen</button>
         </div>
+      </aside>
 
-        <div className="card">
-          <h2>Verstuurd</h2>
-          <h1>{verstuurd.length}</h1>
-          <p>Verstuurde facturen</p>
-        </div>
+      <main className="main">
+        <header className="topbar">
+          <nav>
+            <span>CRM & Klanten</span>
+            <span>Rapportage</span>
+            <span>Werkbonnen</span>
+            <span className="pill">Facturatie</span>
+          </nav>
 
-        <div className="card">
-          <h2>Betaald</h2>
-          <h1>{betaald.length}</h1>
-          <p>Betaalde facturen</p>
-        </div>
-      </section>
+          <div className="profile">🔔 👤</div>
+        </header>
 
-      <section className="card wide">
-        <h2>Nieuwe factuur</h2>
+        <section className="stats">
+          <div className="stat-card">
+            <h3>Verzonden facturen</h3>
+            <strong>448</strong>
+            <p>Afgelopen maand 20% gestegen</p>
+          </div>
 
-        <input
-          placeholder="Klantnaam"
-          value={klant}
-          onChange={(e) => setKlant(e.target.value)}
-        />
+          <div className="stat-card">
+            <h3>Gefactureerd</h3>
+            <strong>€ {totaal.toFixed(2)}</strong>
+            <p>75% van verzonden facturen</p>
+          </div>
 
-        <input
-          placeholder="Omschrijving"
-          value={omschrijving}
-          onChange={(e) => setOmschrijving(e.target.value)}
-        />
+          <div className="stat-card">
+            <h3>Openstaand</h3>
+            <strong>€ {openstaand.toFixed(2)}</strong>
+            <p>Nog te ontvangen bedrag</p>
+          </div>
+        </section>
 
-        <input
-          placeholder="Bedrag excl. btw"
-          type="number"
-          value={bedrag}
-          onChange={(e) => setBedrag(e.target.value)}
-        />
+        <section className="content">
+          <div className="chart-card">
+            <h2>Facturatie per maand</h2>
 
-        <button onClick={factuurToevoegen}>Factuur toevoegen</button>
-      </section>
+            <div className="chart">
+              {["Jan", "Feb", "Mrt", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"].map((m, i) => (
+                <div className="bar-wrap" key={m}>
+                  <div className="bar-bg">
+                    <div className="bar" style={{ height: `${35 + (i * 13) % 55}%` }}></div>
+                  </div>
+                  <small>{m}</small>
+                </div>
+              ))}
+            </div>
+          </div>
 
-      <section className="card wide">
-        <h2>Facturen overzicht</h2>
+          <div className="invoice-card">
+            <h2>Verzonden facturen</h2>
 
-        <table>
-          <thead>
-            <tr>
-              <th>Factuurnr.</th>
-              <th>Klant</th>
-              <th>Omschrijving</th>
-              <th>Bedrag</th>
-              <th>Status</th>
-            </tr>
-          </thead>
+            {facturen.map((f) => (
+              <div className="invoice" key={f.nr}>
+                <div className={f.status === "Niet verstuurd" ? "icon error" : "icon"}>✓</div>
 
-          <tbody>
-            {facturen.map((factuur) => (
-              <tr key={factuur.id}>
-                <td>{factuur.nummer}</td>
-                <td>{factuur.klant}</td>
-                <td>{factuur.omschrijving}</td>
-                <td>€ {Number(factuur.bedrag).toFixed(2)}</td>
-                <td>
-                  <select
-                    value={factuur.status}
-                    onChange={(e) =>
-                      statusWijzigen(factuur.id, e.target.value)
-                    }
-                  >
-                    <option>Openstaand</option>
-                    <option>Verstuurd</option>
-                    <option>Betaald</option>
-                  </select>
-                </td>
-              </tr>
+                <div>
+                  <strong>Factuur {f.nr}</strong>
+                  <p>
+                    {f.status} naar {f.klant}
+                  </p>
+                  <small>{f.tijd}</small>
+                </div>
+
+                <button>Bekijk</button>
+              </div>
             ))}
-          </tbody>
-        </table>
-      </section>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }
